@@ -1,10 +1,7 @@
-tqdm
+numpy
+matplotlib
+Pillow
 torch
 torchvision
 scikit-learn
-matplotlib
-numba
-numpy
-pandas
-Pillow
-pyfunctional
+tqdm

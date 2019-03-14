@@ -2,7 +2,7 @@ from torch import nn
 from torchvision import models
 
 
-class SiameseNN(nn.Module):
+class SiameseNet(nn.Module):
 
     def __init__(self, num_dimensions: int = 16):
         super().__init__()
