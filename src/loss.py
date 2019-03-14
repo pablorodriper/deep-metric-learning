@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 import torch.nn.functional as F
 
@@ -14,7 +13,7 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
 
     def forward(self, output1, output2, target):
-        euclidean_distance = F.pairwise_distance(output1, output2)
-        loss = torch.mean((1-target) * euclidean_distance.pow(2) +
-                          (target) * F.relu(self.margin - euclidean_distance).pow(2))
-        return loss
+        dist = (output2 - output1).pow(2).sum(1)
+        loss = 0.5 * ((1-target).float() * dist.pow(2) +
+                      (target).float() * F.relu(self.margin - dist).pow(2))
+        return loss.mean()

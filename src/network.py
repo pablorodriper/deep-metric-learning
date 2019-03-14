@@ -4,14 +4,14 @@ from torchvision import models
 
 class SiameseNet(nn.Module):
 
-    def __init__(self, num_dimensions: int = 16):
-        super().__init__()
+    def __init__(self, num_dims: int = 16):
+        super(SiameseNet, self).__init__()
 
         self.model = models.resnet18(pretrained=True)
-        self.model.fc = nn.Linear(2048, num_dimensions)
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = nn.Linear(num_ftrs, num_dims)
 
-    def forward(self, *data):
-        res = []
-        for i in range(2):
-            res.append(self.model.forward(data[i]))
-        return res
+    def forward(self, x1, x2):
+        output1 = self.model(x1)
+        output2 = self.model(x2)
+        return output1, output2
