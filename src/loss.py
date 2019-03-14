@@ -1,22 +1,20 @@
+import torch
 from torch import nn
-from torch.nn.functional import relu
+import torch.nn.functional as F
 
 
 class ContrastiveLoss(nn.Module):
     """
-    Contrastive loss
-    Takes embeddings of two samples and a target label == 1 if samples are from the same class and label == 0 otherwise
+    Contrastive loss function.
+    Based on: http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
     """
 
-    def __init__(self, margin):
+    def __init__(self, margin=2.0):
         super(ContrastiveLoss, self).__init__()
         self.margin = margin
-        self.eps = 1e-9
 
-    def forward(self, output1, output2, target, size_average=True):
-        distances = (output2 - output1).pow(2).sum(1)  # squared distances
-        losses = 0.5 * (target.float() * distances +
-                        (1 + -1 * target).float() * relu(self.margin - (distances + self.eps).sqrt()).pow(
-                    2))
-
-        return losses.mean() if size_average else losses.sum()
+    def forward(self, output1, output2, target):
+        euclidean_distance = F.pairwise_distance(output1, output2)
+        loss = torch.mean((1-target) * euclidean_distance.pow(2) +
+                          (target) * F.relu(self.margin - euclidean_distance).pow(2))
+        return loss
