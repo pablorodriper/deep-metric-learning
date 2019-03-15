@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+import ml_metrics
 import pandas as pandas
 from PIL import Image
 from torchvision.datasets import ImageFolder
@@ -60,8 +61,9 @@ def main():
     optimizer = Adam(model.parameters())
     scheduler = StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
 
-    table = []
+    print('Starting training...')
 
+    table = []
     for epoch in trange(1, args.epochs + 1, desc="Training", file=sys.stdout):
         scheduler.step()
         losses = []
@@ -92,28 +94,57 @@ def main():
     print('\nTraining stats:')
     print(df)
 
-    predict_set = ImageFolder(args.dataset_dir, transform=valid_transform)
-    predict_loader = DataLoader(predict_set, batch_size=100, shuffle=False, num_workers=4)
+    print('Finished training')
+
+    test_train_set = ImageFolder(args.dataset_dir, transform=valid_transform)
+    test_train_loader = DataLoader(test_train_set, batch_size=100, shuffle=False, num_workers=4)
+
+    # TODO different test_set
+    test_set = ImageFolder(args.dataset_dir, transform=valid_transform)
+    test_loader = DataLoader(test_set, batch_size=100, shuffle=False, num_workers=4)
+
+    print('Starting test...')
 
     model.eval()
-    positions = None
+    x = None
     with torch.no_grad():
-        for images, target in tqdm(predict_loader, desc='Predicting...', file=sys.stdout):
+        for images, target in tqdm(test_train_loader, desc='Calculating model', file=sys.stdout):
             if cuda:
                 images = images.cuda()
 
             output2 = model.forward_single(images)
-            if positions is None:
-                positions = output2.cpu().numpy()
+            if x is None:
+                x = output2.cpu().numpy()
             else:
-                positions = np.vstack([positions, output2.cpu().numpy()])
+                x = np.vstack([x, output2.cpu().numpy()])
 
-    nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(positions)
-    distances, indices = nbrs.kneighbors(positions[(0, 10, 50, 100, 150), :])
+    # TODO uncomment when different train set
+    y = x
+    """y = None
+    with torch.no_grad():
+        for images, target in tqdm(test_loader, desc='Calculating queries', file=sys.stdout):
+            if cuda:
+                images = images.cuda()
 
-    print('Calculating knn for 0, 10, 50, 100, 150')
-    print(distances)
-    print(indices)
+            output2 = model.forward_single(images)
+            if y is None:
+                y = output2.cpu().numpy()
+            else:
+                y = np.vstack([y, output2.cpu().numpy()])"""
+
+    nbrs = NearestNeighbors(n_neighbors=10, algorithm='ball_tree').fit(x)
+    distances, indices = nbrs.kneighbors(y)
+    for x in range(indices.shape[0]):
+        for y in range(indices.shape[1]):
+            indices[x, y] = train_set.targets[indices[x, y]]
+    actual = np.array(test_set.targets).reshape([-1, 1])
+
+    # TODO remove skipping first index when using test dataset
+    print('K=1:', ml_metrics.mapk(actual, indices[:, 1:], k=1))
+    print('K=5:', ml_metrics.mapk(actual, indices[:, 1:], k=5))
+    print('K=10:', ml_metrics.mapk(actual, indices[:, 1:], k=10))
+
+    print('Finished test')
 
 
 if __name__ == '__main__':
