@@ -15,3 +15,6 @@ class SiameseNet(nn.Module):
         output1 = self.model(x1)
         output2 = self.model(x2)
         return output1, output2
+
+    def forward_single(self, data):
+        return self.model(data)
