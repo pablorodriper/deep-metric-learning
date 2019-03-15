@@ -78,7 +78,7 @@ def main():
                 optimizer.zero_grad()
                 output1, output2 = model(sample1, sample2)
 
-                loss = criterion.forward(output1, output2, target)
+                loss = criterion(output1, output2, target)
                 losses.append(loss.item())
                 loss.backward()
                 optimizer.step()
@@ -89,19 +89,13 @@ def main():
 
     df = pandas.DataFrame(table, columns=['epoch', 'mean_loss'])
     df.set_index('epoch', inplace=True)
+    print('\nTraining stats:')
     print(df)
 
     predict_set = ImageFolder(args.dataset_dir, transform=valid_transform)
     predict_loader = DataLoader(predict_set, batch_size=100, shuffle=False, num_workers=4)
 
-    src_image = predict_set[0][0].view([1, 3, 224, 224])
-    if cuda:
-        src_image = src_image.cuda()
-
-    # TODO, optimize and not go one by one
-
     model.eval()
-
     positions = None
     with torch.no_grad():
         for images, target in tqdm(predict_loader, desc='Predicting...', file=sys.stdout):
@@ -114,7 +108,11 @@ def main():
             else:
                 np.vstack([positions, output2.cpu().numpy()])
 
-    nbrs = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(positions)
+    nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(positions)
+    distances, indices = nbrs.kneighbors(positions[0, :])
+
+    print(distances)
+    print(indices)
 
 
 if __name__ == '__main__':
