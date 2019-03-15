@@ -32,6 +32,8 @@ def parse_args():
 
 def main():
     args = parse_args()
+    
+    print(args)
 
     cuda = torch.cuda.is_available()
     if cuda:
