@@ -22,7 +22,7 @@ from sklearn.neighbors import NearestNeighbors
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('dataset_dir', type=str)
-    parser.add_argument('--epochs', type=int, default=5)
+    parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--dim', type=int, default=16)
     return parser.parse_args()
 
@@ -106,11 +106,12 @@ def main():
             if positions is None:
                 positions = output2.cpu().numpy()
             else:
-                np.vstack([positions, output2.cpu().numpy()])
+                positions = np.vstack([positions, output2.cpu().numpy()])
 
     nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(positions)
-    distances, indices = nbrs.kneighbors(positions[(0, 10, 100), :])
+    distances, indices = nbrs.kneighbors(positions[(0, 10, 50, 100, 150), :])
 
+    print('Calculating knn for 0, 10, 50, 100, 150')
     print(distances)
     print(indices)
 
