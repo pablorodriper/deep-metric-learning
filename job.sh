@@ -8,4 +8,4 @@
 #SBATCH --output ../logs/%x_%u_%j.out
 
 source /home/grupo06/venv/bin/activate
-python src/main.py datasets/tsinghua_resized/
+python src/main.py datasets/tsinghua_resized/ --batch-size 128

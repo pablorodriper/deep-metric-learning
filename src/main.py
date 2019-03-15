@@ -25,6 +25,8 @@ def parse_args():
     parser.add_argument('dataset_dir', type=str)
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--dim', type=int, default=16)
+    parser.add_argument('--batch-size', type=int, default=32)
+    parser.add_argument('--test-batch-size', type=int, default=128)
     return parser.parse_args()
 
 
@@ -50,7 +52,7 @@ def main():
     ])
 
     train_set = SiameseDataset(args.dataset_dir, train_transform)
-    train_loader = DataLoader(train_set, batch_size=40, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=4)
     print(train_set)
 
     model = SiameseNet(args.dim)
@@ -94,14 +96,14 @@ def main():
     print('\nTraining stats:')
     print(df)
 
-    print('Finished training')
+    print('Finished training\n')
 
     test_train_set = ImageFolder(args.dataset_dir, transform=valid_transform)
-    test_train_loader = DataLoader(test_train_set, batch_size=100, shuffle=False, num_workers=4)
+    test_train_loader = DataLoader(test_train_set, batch_size=args.test_batch_size, shuffle=False, num_workers=4)
 
     # TODO different test_set
     test_set = ImageFolder(args.dataset_dir, transform=valid_transform)
-    test_loader = DataLoader(test_set, batch_size=100, shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, num_workers=4)
 
     print('Starting test...')
 
