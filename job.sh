@@ -4,7 +4,7 @@
 #SBATCH --mem 16G
 #SBATCH --partition mhigh,mlow
 #SBATCH --gres gpu:1
-#SBATCH --chdir /home/grupo06/m5-project
+#SBATCH --chdir /home/grupo06/deep-metric-learning
 #SBATCH --output ../logs/%x_%u_%j.out
 
 source /home/grupo06/venv/bin/activate
