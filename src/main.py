@@ -4,8 +4,8 @@ import sys
 import numpy as np
 from PIL import Image
 from tqdm import tqdm, trange
-from sklearn.neighbors import NearestNeighbors
 import pandas as pandas
+from sklearn.neighbors import NearestNeighbors
 import ml_metrics
 
 import torch
@@ -14,6 +14,9 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 from torchvision.datasets import ImageFolder
+
+from sklearn.manifold import TSNE
+from matplotlib import pyplot as plt
 
 from dataloader import SiameseDataset
 from network import SiameseNet
@@ -31,7 +34,6 @@ def parse_args():
 
 def main():
     args = parse_args()
-    print(vars(args))
 
     cuda = torch.cuda.is_available()
     if cuda:
@@ -125,6 +127,14 @@ def main():
     print('K=1:', ml_metrics.mapk(actual, predicted[:, 1:], k=1))
     print('K=5:', ml_metrics.mapk(actual, predicted[:, 1:], k=5))
     print('K=10:', ml_metrics.mapk(actual, predicted[:, 1:], k=10))
+
+    embeddings = TSNE(n_components=2).fit_transform(embeddings)
+    for cls in np.random.choice(valid_set.classes, 10):
+        i = valid_set.class_to_idx[cls]
+        inds = np.where(actual == i)[0]
+        plt.scatter(embeddings[inds, 0], embeddings[inds, 1], alpha=0.5)
+    plt.legend(valid_set.classes)
+    plt.savefig('embeddings.png')
 
 
 if __name__ == '__main__':
