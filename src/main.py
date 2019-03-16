@@ -23,10 +23,9 @@ from loss import ContrastiveLoss
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_dir', type=str, required=True)
-    parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--dims', type=int, default=16)
-    parser.add_argument('--dim', type=int, default=16)
-    parser.add_argument('--batch-size', type=int, default=32)
+    parser.add_argument('--epochs', type=int, default=25)
+    parser.add_argument('--dims', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=32)
     return parser.parse_args()
 
 
@@ -97,34 +96,35 @@ def main():
     print('\nTraining stats:')
     print(df)
 
-    test_set = ImageFolder(args.dataset_dir, transform=valid_transform)
-    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, num_workers=4)
+    valid_set = ImageFolder(args.dataset_dir, transform=valid_transform)
+    valid_loader = DataLoader(valid_set, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
     model.eval()
-    embeddings = None
+    embeddings = []
+    actual = []
     with torch.no_grad():
-        for sample, target in tqdm(test_loader, desc='Predict', total=len(test_loader), file=sys.stdout):
+        for sample, target in tqdm(valid_loader, desc='Validation', total=len(valid_loader), file=sys.stdout):
             if cuda:
                 sample = sample.cuda()
 
             output = model.get_embedding(sample)
 
-            if embeddings is None:
-                embeddings = output.cpu().numpy()
-            else:
-                embeddings = np.vstack([embeddings, output.cpu().numpy()])
+            embeddings.append(output.cpu().numpy())
+            actual.append(target.reshape([-1, 1]))
+    embeddings = np.vstack(embeddings)
+    actual = np.vstack(actual)
 
     nbrs = NearestNeighbors(n_neighbors=10, algorithm='ball_tree').fit(embeddings)
     distances, indices = nbrs.kneighbors(embeddings)
+    predicted = np.empty(shape=indices.shape)
     for x in range(indices.shape[0]):
         for y in range(indices.shape[1]):
-            indices[x, y] = train_set.targets[indices[x, y]]
-    actual = np.array(test_set.targets).reshape([-1, 1])
+            predicted[x, y] = valid_set.targets[indices[x, y]]
 
-    # TODO remove skipping first index when using test dataset
-    print('K=1:', ml_metrics.mapk(actual, indices[:, 1:], k=1))
-    print('K=5:', ml_metrics.mapk(actual, indices[:, 1:], k=5))
-    print('K=10:', ml_metrics.mapk(actual, indices[:, 1:], k=10))
+    # TODO: remove skipping first index when using test dataset
+    print('K=1:', ml_metrics.mapk(actual, predicted[:, 1:], k=1))
+    print('K=5:', ml_metrics.mapk(actual, predicted[:, 1:], k=5))
+    print('K=10:', ml_metrics.mapk(actual, predicted[:, 1:], k=10))
 
 
 if __name__ == '__main__':
