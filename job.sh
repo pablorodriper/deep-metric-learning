@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-#SBATCH --job-name siamese
+#SBATCH --job-name deep-metric-learning
 #SBATCH --ntasks 4
 #SBATCH --mem 16G
-#SBATCH --partition mhigh,mlow
+#SBATCH --qos masterhigh
+#SBATCH --partition mhigh
 #SBATCH --gres gpu:1
-#SBATCH --chdir /home/grupo06/deep-metric-learning
-#SBATCH --output ../logs/%x_%u_%j.out
+#SBATCH --chdir /home/grupo06/.oscar/deep-metric-learning
+#SBATCH --output logs/%x_%j.out
 
-source /home/grupo06/venv/bin/activate
-python src/main.py datasets/tsinghua_resized/ --batch-size 128
+source venv/bin/activate
+python src/main.py --dataset_dir datasets/tsinghua_resized

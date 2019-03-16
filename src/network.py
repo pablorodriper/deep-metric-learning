@@ -16,5 +16,5 @@ class SiameseNet(nn.Module):
         output2 = self.model(x2)
         return output1, output2
 
-    def forward_single(self, data):
+    def get_embedding(self, data):
         return self.model(data)

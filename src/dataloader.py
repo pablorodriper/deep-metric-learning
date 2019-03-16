@@ -2,8 +2,7 @@ from torchvision.datasets import ImageFolder
 
 import numpy as np
 
-# The higher the more positives
-POSITIVE_NEGATIVE_RATIO = 0.1
+POSITIVE_NEGATIVE_RATIO = 0.1  # higher means more positives
 
 
 class SiameseDataset(ImageFolder):
@@ -14,11 +13,10 @@ class SiameseDataset(ImageFolder):
 
         self.label_to_idxs = {label: np.where(np.array(self.targets) == self.class_to_idx[label])[0] for label in
                               self.classes}
+        np.random.seed(42)
 
     def __getitem__(self, index):
-        # TODO should we use a seed?
-
-        target = np.random.random_sample() > POSITIVE_NEGATIVE_RATIO
+        target = int(np.random.random_sample() > POSITIVE_NEGATIVE_RATIO)
         if target == 0:
             siamese_label = self.classes[self.targets[index]]
         else:

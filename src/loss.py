@@ -15,5 +15,5 @@ class ContrastiveLoss(nn.Module):
     def forward(self, output1, output2, target):
         dist = (output2 - output1).pow(2).sum(1)
         loss = 0.5 * ((1 - target).float() * dist.pow(2) +
-                      target.float() * F.relu(self.margin - dist).pow(2))
+                      (target).float() * F.relu(self.margin - dist).pow(2))
         return loss.mean()
